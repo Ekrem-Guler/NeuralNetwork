@@ -44,11 +44,13 @@ class Layer{
         int previous,current;
         bool works_before = false;
         vector<vector<Value>> first_weights(){
+            static mt19937 gen(42);
+            normal_distribution<double> dist(0.0, 0.5);
             for(int i=0;i<current;i++){
                 vector<Value> row;
                 for(int j= 0;j<previous;j++){
                     Value v;
-                    v.data =1.0;
+                    v.data =dist(gen);
                     v.grad = 0.0;
                     row.push_back(v);
                     
@@ -100,9 +102,6 @@ class Sequence{
                         
                     }
                     result = activation_func(sum,activation);
-                  
-
-                   
 
                     current_l.neurons[i].activation_value = result;
 
@@ -134,8 +133,7 @@ class Sequence{
             for(int i=0;i<current_s;i++){
                 for(int j=0;j<previous_s;j++){
                     current_l.weights[i][j].data -= learning_rate*current_l.weights[i][j].grad/batch_size;
-cout<<"WEIGHT GRAD: "<<current_l.weights[i][j].grad <<endl;
-cout<<"WEIGHT: "<<i<<" "<<j<<" "<<current_l.weights[i][j].data <<endl;
+
                 }
                 
             }
@@ -150,13 +148,14 @@ cout<<"WEIGHT: "<<i<<" "<<j<<" "<<current_l.weights[i][j].data <<endl;
             return 1.0;
         }
 
-        void one_step(vector<Layer> &l,vector<double> v,vector<double> y,string loss,int phase,string activate){
+        void one_step(vector<Layer> &l,vector<double> v,vector<double> y,string loss,int phase,string activate,double &loss_sum,vector<double> losses){
             int size_l = l.size();
             int size_inp = v.size();
             for (int i=0;i<size_inp;i++){
                 l[0].neurons[i] = v[i];
                 
             }
+            
             l[0].works_before = true;
 
             for(int i= 1;i<size_l;i++){
@@ -172,11 +171,14 @@ cout<<"WEIGHT: "<<i<<" "<<j<<" "<<current_l.weights[i][j].data <<endl;
             }
             
 
-cout<<"Answer for "<<phase<<":   "<<l[size_l-1].neurons[0].activation_value<<endl<<"Result:  " <<loss_der(l[size_l-1].neurons[0].activation_value,y[phase],loss)<<endl<<"SEED: "<< l[size_l-1].neurons[0].grad <<endl;
+cout<<"Answer for "<<phase<<":   "<<l[size_l-1].neurons[0].activation_value<<endl<<"Result:  " <<loss_sum<<endl<<"SEED: "<< l[size_l-1].neurons[0].grad <<endl;
             
-            l[size_l-1].neurons[0].grad = loss_der(l[size_l-1].neurons[0].activation_value,y[phase],loss);
+                
+            l[size_l-1].neurons[0].grad =loss_der(l[size_l-1].neurons[0].activation_value,y[phase],loss);
+
             for(int i = size_l-1;i>0;i--){
-                backward(l[i].current,l[i].previous,l[i-1],l[i],activate);
+                string act = (i == size_l-1) ? "simple" : activate;
+                backward(l[i].current,l[i].previous,l[i-1],l[i],act);
             }
         }
 
@@ -196,6 +198,8 @@ cout<<"Answer for "<<phase<<":   "<<l[size_l-1].neurons[0].activation_value<<end
         void all_stages(vector<Layer> &l,Input inp,int batch_size,vector<double> y,string loss,int epoch,double lr,string activate){
             int size_l = l.size();
             int size_batch = inp.v.size()/batch_size;
+            double loss_sum = 0.0;
+            vector<double> losses = {0.0,0.0,0.0};
             for(int e=0;e<epoch;e++){
                 cout<<e<<" Epoch: "<<endl;
                 for(int i = 0;i<size_batch;i++){
@@ -206,7 +210,8 @@ cout<<"Answer for "<<phase<<":   "<<l[size_l-1].neurons[0].activation_value<<end
                     
                     for(int j= 0;j<batch_size;j++){
                         cout<<"INPUT: "<<inp.v[j+i*batch_size][0]<<endl;
-                        one_step(l,inp.v[j+i*batch_size],y,loss,j+i*batch_size,activate);
+                        
+                        one_step(l,inp.v[j+i*batch_size],y,loss,j+i*batch_size,activate,loss_sum,losses);
                     }
 
                     for(int j = 1;j<size_l;j++){
@@ -215,7 +220,7 @@ cout<<"Answer for "<<phase<<":   "<<l[size_l-1].neurons[0].activation_value<<end
                 }
             }
         }
-        Sequence(vector<Layer> l,Input inp,int batch_size,vector<double> y,string loss,int epoch,double lr,string activate){
+        Sequence(vector<Layer> &l,Input inp,int batch_size,vector<double> y,string loss,int epoch,double lr,string activate){
             all_stages(l,inp,batch_size,y,loss,epoch,lr,activate);
           /*
  int size_l = l.size();
@@ -261,7 +266,7 @@ cout<<"Answer for "<<phase<<":   "<<l[size_l-1].neurons[0].activation_value<<end
 int main(){
     
     vector <vector<double>> v = {{1,2,3},{2,3,5},{3,4,7}};
-    vector<double> y = {12,2,3};
+    vector<double> y = {6, 10, 14}; 
     vector<vector<Neuron>> neurons1;
     vector<Neuron> neurons(v[0].begin(), v[0].end());
     neurons1.push_back(neurons);
@@ -273,6 +278,6 @@ int main(){
     Layer layer3 = Layer(2,1);
     cout<<layer.weights[0].size();
     vector<Layer> layers = {layer1,layer,layer2,layer3};
-    Sequence sequnce1 = Sequence(layers,input,1,y,"MSE",100,0.001,"sigmoid");
+    Sequence sequnce1 = Sequence(layers,input,1,y,"MSE",5000,0.001,"sigmoid");
     return 0;
 }
