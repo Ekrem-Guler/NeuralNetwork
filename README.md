@@ -1,8 +1,8 @@
 # Sıfırdan Sinir Ağı (C++)
 
-Hiçbir harici makine öğrenmesi kütüphanesi (NumPy, PyTorch, Eigen vb.) kullanmadan, saf C++ ve `std::vector` ile yazılmış bir ileri beslemeli sinir ağı (feedforward neural network). Forward propagation, backpropagation ve gradient descent tamamen elle implemente edilmiştir.
+Hiçbir harici makine öğrenmesi kütüphanesi (NumPy, PyTorch, Eigen vb.) kullanmadan, saf C++ ve `std::vector` ile yazılmış bir ileri beslemeli sinir ağı (feedforward neural network). Forward propagation, backpropagation ve gradient descent tamamen elle implemente edilmiştir. README.md dosyasında yapay zekadan faydalanılsa da projenin geneli elle yazılmıştır.
 
-Bu proje öğrenme amaçlıdır: bir sinir ağının "kaputunun altında" nasıl çalıştığını adım adım göstermek için yazılmıştır.
+Bu proje öğrenme amaçlıdır: bir sinir ağının nasıl çalıştığını adım adım göstermek için yazılmıştır.
 
 ## İçindekiler
 
